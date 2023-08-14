@@ -1212,12 +1212,12 @@ class SaveImage:
         filename_prefix += self.prefix_append
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
         results = list()
-
+    
         # Create a password-protected ZIP file
         zip_filename = os.path.join(full_output_folder, f"{filename}.zip")
         with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            zip_file.setpassword(b"aspari")  # Set the password for the ZIP file
-
+            zip_file.setpassword("aspari".encode())  # Set the password for the ZIP file
+    
             for image in images:
                 i = 255. * image.cpu().numpy()
                 img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
@@ -1227,20 +1227,22 @@ class SaveImage:
                 if extra_pnginfo is not None:
                     for x in extra_pnginfo:
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
-
-                file = f"{filename}_{counter:05}_.png"
+    
+                # Generate a random 10-symbol name for the file
+                random_name = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+                file = f"{random_name}.png"
                 img.save(file, pnginfo=metadata, compress_level=4)
-
+    
                 # Add the image file to the ZIP file
                 zip_file.write(file, os.path.basename(file))
-
+    
                 results.append({
                     "filename": file,
                     "subfolder": subfolder,
                     "type": self.type
                 })
                 counter += 1
-
+    
         return {"ui": {"images": results}}
 
 class PreviewImage(SaveImage):
